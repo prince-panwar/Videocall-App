@@ -1,0 +1,13 @@
+{
+  "name": "videocall-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "server": "cd server && npm start",
+    "client": "cd client && yarn dev",
+    "start": "concurrently --kill-others \"npm run server\" \"npm run client\""
+  },
+  "author": "",
+  "license": "ISC"
+}

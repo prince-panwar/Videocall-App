@@ -1,22 +1,27 @@
-import React from "react";
-import {Card, CardHeader, CardBody} from "@nextui-org/react";
+import React, { useState, useEffect } from 'react';
+import ReactPlayer from 'react-player';
 
-export default function VideoCallCard({ videoSrc }) {
+export default function VideoCallCard({ videoSrc,height,width }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);  // After the component is mounted, set isMounted to true
+  }, []);
+
+  if (!isMounted) {
+    return null;  // If the component hasn't mounted yet, don't render anything
+  }
+
+  // Once the component has mounted, render the ReactPlayer
   return (
-    <Card className="py-4">
-      <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-        <h4 className="font-bold text-large">Video Call</h4>
-      </CardHeader>
-      <CardBody className="overflow-visible py-2">
-        <video
-          className="object-cover rounded-xl"
-          src={videoSrc}
-          autoPlay
-          controls
-          width="100%"
-          height="100%"
-        />
-      </CardBody>
-    </Card>
+    <div>
+      <ReactPlayer
+        playing
+        url={videoSrc}
+        height={height}
+        width={width}
+        autoPlay
+      />
+    </div>
   );
 }

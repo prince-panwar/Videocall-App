@@ -1,11 +1,14 @@
 'use client'
 import React, { useCallback ,useEffect} from "react";
+import { useRouter } from "next/navigation";
 import { Input, Tabs, Tab, Card, CardBody, Button } from "@nextui-org/react";
 import { useSocket } from "../providers/SocketProvider";
+
 export default function LobbyFrom() {
   const [Email, setEmail] = React.useState("");  
   const [roomNO, setNO] = React.useState(""); 
   const socket = useSocket();
+  const Router = useRouter();
   
 
   const validateEmail = (value) =>
@@ -19,11 +22,13 @@ export default function LobbyFrom() {
   
   const handleJoinbutton=useCallback((e)=>{
     socket.emit("join-room",{roomNO,Email});
+    Router.push(`/${roomNO}`);
    
   },[Email,roomNO,socket]);
   
   const joinRoom = useCallback((data)=>{
-   console.log(data.Email,data.roomNO); 
+   console.log(data.Email,data.roomNO);
+
   },[])
  
   useEffect(() => {

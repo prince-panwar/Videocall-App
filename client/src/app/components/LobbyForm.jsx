@@ -22,12 +22,13 @@ export default function LobbyFrom() {
   
   const handleJoinbutton=useCallback((e)=>{
     socket.emit("join-room",{roomNO,Email});
-    Router.push(`/${roomNO}`);
+   
    
   },[Email,roomNO,socket]);
   
   const joinRoom = useCallback((data)=>{
-   console.log(data.Email,data.roomNO);
+    Router.push(`/${data.roomNO}`);
+   //console.log(data.Email,data.roomNO);
 
   },[])
  

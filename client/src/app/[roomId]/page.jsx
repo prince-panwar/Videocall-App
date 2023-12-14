@@ -2,36 +2,83 @@
 import React, { useEffect ,useCallback, useState} from 'react'
 import VideoCallCard from '../components/card'
 import { useSocket } from '../providers/SocketProvider'
+import PeerService from '../service/peer'
 import { Button } from '@nextui-org/react'
 import { IoIosCall } from "react-icons/io";
 import { FaVideo } from "react-icons/fa";
 import { FaVideoSlash } from "react-icons/fa";
 import { AiFillAudio } from "react-icons/ai";
 import { AiOutlineAudioMuted } from "react-icons/ai";
-
-export default function page({params}) {
+export default function page({ params }) {
   const socket = useSocket();
-  const [remoteSocketId,setRemoteSocketId]= useState(null);
+  const [remoteSocketId, setRemoteSocketId] = useState(null);
   const [myStream, setMyStream] = useState(null);
-  
-  const handleUserJoined=useCallback(({Email,id})=>{
-    console.log("email",Email,"Socket",id);
+
+  const handleUserJoined = useCallback(({ Email, id }) => {
+    console.log('User joined:', Email, 'Socket ID:', id);
     setRemoteSocketId(id);
-    console.log( "remoatesocketId",remoteSocketId);
-  },[remoteSocketId])
+  }, []);
 
-  useEffect(()=>{
-    const fetchStream = async()=>{
-      const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  const handleIncomingCall = useCallback(async (from, offer) => {
+    console.log('Incoming call from', from, 'with offer', offer);
+    setRemoteSocketId(from);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      console.log('getUserMedia success');
       setMyStream(stream);
-    }
-    fetchStream();
-  },[]);
 
-  useEffect(()=>{
-    socket.on("user-joined",handleUserJoined);
-    return ()=>socket.off("user-joined",handleUserJoined);
-  },[socket,handleUserJoined]);
+      const ans = await PeerService.getAnswer(offer);
+      console.log('Answer generated', ans);
+
+      socket.emit('call-accepted', { to: from, answer: ans });
+      console.log('Sent call-accepted');
+      
+    } catch (error) {
+      console.error('Error handling incoming call:', error);
+    }
+  }, [socket, ]);
+
+  const handleCallAccepted = useCallback(async ({ from, answer }) => {
+   console.log('Call accepted from', from, 'with answer', answer);
+    try {
+      await PeerService.setLocalDescription(answer);
+      console.log('Call accepted');
+    } catch (error) {
+      console.error('Error accepting call:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchStream = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const offer = await PeerService.getOffer();
+
+        if (remoteSocketId) {
+          socket.emit('user-call', { to: remoteSocketId, offer });
+          console.log('User call sent');
+        }
+
+        setMyStream(stream);
+      } catch (error) {
+        console.error('Error fetching stream:', error);
+      }
+    };
+
+    fetchStream();
+  }, [remoteSocketId, socket]);
+
+  useEffect(() => {
+    socket.on('user-joined', handleUserJoined);
+    socket.on('incoming-call', ({ from, offer }) => handleIncomingCall(from, offer));
+    socket.on('call-accepted', handleCallAccepted);
+
+    return () => {
+      socket.off('user-joined', handleUserJoined);
+      socket.off('incoming-call', handleIncomingCall);
+      socket.off('call-accepted', handleCallAccepted);
+    };
+  }, [socket,handleUserJoined,handleIncomingCall.handCallAccepeted]);
 
   return (
    
